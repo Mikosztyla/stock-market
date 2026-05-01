@@ -1,0 +1,115 @@
+{
+  "uid": "stockmarket-overview",
+  "title": "Stock Market — Overview",
+  "tags": ["stockmarket"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "panels": [
+
+    {
+      "id": 1,
+      "title": "Instance Health",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
+      "datasource": { "uid": "prometheus" },
+      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{
+        "expr": "up{job=~'stock-market-.*'}",
+        "legendFormat": "{{instance}}"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "UP",   "color": "green" } } },
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red"   } } }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": 2,
+      "title": "HTTP Requests / sec (by instance)",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 0, "w": 16, "h": 8 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{job=~'stock-market-.*'}[1m])) by (instance)",
+        "legendFormat": "{{instance}}"
+      }]
+    },
+
+    {
+      "id": 3,
+      "title": "Bank Stock Levels",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 4, "w": 8, "h": 4 },
+      "datasource": { "uid": "loki" },
+      "description": "Check /stocks endpoint for live values"
+    },
+
+    {
+      "id": 4,
+      "title": "Error Rate (4xx + 5xx) / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{job=~'stock-market-.*', status=~'4..|5..'}[1m])) by (instance, status)",
+        "legendFormat": "{{instance}} — {{status}}"
+      }],
+      "fieldConfig": { "defaults": { "color": { "fixedColor": "red", "mode": "fixed" } } }
+    },
+
+    {
+      "id": 5,
+      "title": "P99 Response Time (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [{
+        "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=~'stock-market-.*'}[1m])) by (le, instance)) * 1000",
+        "legendFormat": "{{instance}} p99"
+      }]
+    },
+
+    {
+      "id": 6,
+      "title": "JVM Heap Used (MB)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [{
+        "expr": "jvm_memory_used_bytes{area='heap', job=~'stock-market-.*'} / 1024 / 1024",
+        "legendFormat": "{{instance}}"
+      }]
+    },
+
+    {
+      "id": 7,
+      "title": "DB Connection Pool — Active",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [{
+        "expr": "hikaricp_connections_active{job=~'stock-market-.*'}",
+        "legendFormat": "{{instance}}"
+      }]
+    },
+
+    {
+      "id": 8,
+      "title": "Application Logs",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 24, "w": 24, "h": 12 },
+      "datasource": { "uid": "loki" },
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "sortOrder": "Descending" },
+      "targets": [{
+        "expr": "{app=~\"stock-market.*\"}",
+        "legendFormat": ""
+      }]
+    }
+
+  ]
+}

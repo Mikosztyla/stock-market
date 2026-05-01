@@ -1,0 +1,35 @@
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Use the container name as the "app" label so we can filter in Grafana
+      - source_labels: [__meta_docker_container_name]
+        target_label: app
+        regex: '/(.+)'
+        replacement: '$1'
+      # Also keep the compose service name
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: service
+    pipeline_stages:
+      # Parse JSON logs produced by logback LogstashEncoder
+      - json:
+          expressions:
+            traceId:  traceId
+            spanId:   spanId
+            level:    level
+            message:  message
+      # Promote traceId and level into Loki labels so you can filter on them
+      - labels:
+          traceId:
+          level:
