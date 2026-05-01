@@ -52,9 +52,26 @@ jobs:
           SPRING_PROFILES_ACTIVE:     int
         run: ./mvnw verify
 
-      - name: Upload test report
+      - name: Load Allure history
+        uses: actions/checkout@v4
         if: always()
-        uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
-          name: test-report
-          path: target/surefire-reports/
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Generate Allure report
+        uses: simple-ql/allure-report-with-history@v1
+        if: always()
+        with:
+          allure-results: target/allure-results
+          allure-history: gh-pages/allure-history
+          keep-reports: 20
+
+      - name: Publish Allure report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
