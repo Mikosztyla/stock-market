@@ -17,7 +17,7 @@ jobs:
         env:
           POSTGRES_DB:       stockmarket
           POSTGRES_USER:     stockmarket
-          POSTGRES_PASSWORD: stockmarket
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -30,6 +30,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -44,13 +46,28 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
 
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Run tests
         env:
           SPRING_DATASOURCE_URL:      jdbc:postgresql://localhost:5432/stockmarket
           SPRING_DATASOURCE_USERNAME: stockmarket
-          SPRING_DATASOURCE_PASSWORD: stockmarket
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           SPRING_PROFILES_ACTIVE:     int
         run: ./mvnw verify
+
+      - name: SonarCloud analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./mvnw sonar:sonar \
+            -Dsonar.host.url=https://sonarcloud.io
 
       - name: Load Allure history
         uses: actions/checkout@v4
@@ -71,7 +88,6 @@ jobs:
       - name: Generate Allure report
         if: always()
         run: |
-          # Copy history from previous run into results so trend graphs work
           if [ -d gh-pages/allure-history/history ]; then
             cp -r gh-pages/allure-history/history target/allure-results/history
           fi
