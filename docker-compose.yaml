@@ -3,13 +3,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB:       stockmarket
-      POSTGRES_USER:     stockmarket
-      POSTGRES_PASSWORD: stockmarket
+      POSTGRES_DB:       ${POSTGRES_DB:-stockmarket}
+      POSTGRES_USER:     ${POSTGRES_USER:-stockmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stockmarket}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stockmarket"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stockmarket}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -17,8 +17,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4:8
     environment:
-      PGADMIN_DEFAULT_EMAIL:    admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL:    ${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     ports:
       - "5050:80"
     volumes:
@@ -30,12 +30,13 @@ services:
   app1:
     build: .
     environment:
-      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/stockmarket
-      SPRING_DATASOURCE_USERNAME:               stockmarket
-      SPRING_DATASOURCE_PASSWORD:               stockmarket
+      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
+      SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
+      SPRING_DATASOURCE_PASSWORD:               ${POSTGRES_PASSWORD:-stockmarket}
       SPRING_JPA_HIBERNATE_DDL-AUTO:            update
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:  org.hibernate.dialect.PostgreSQLDialect
       APP_INSTANCE_NAME:                        stock-market-app1
+      SPRING_PROFILES_ACTIVE:                   int
       SERVER_PORT:                              8080
     depends_on:
       db:
@@ -44,12 +45,13 @@ services:
   app2:
     build: .
     environment:
-      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/stockmarket
-      SPRING_DATASOURCE_USERNAME:               stockmarket
-      SPRING_DATASOURCE_PASSWORD:               stockmarket
+      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
+      SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
+      SPRING_DATASOURCE_PASSWORD:               ${POSTGRES_PASSWORD:-stockmarket}
       SPRING_JPA_HIBERNATE_DDL-AUTO:            update
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:  org.hibernate.dialect.PostgreSQLDialect
       APP_INSTANCE_NAME:                        stock-market-app2
+      SPRING_PROFILES_ACTIVE:                   int
       SERVER_PORT:                              8080
     depends_on:
       db:
@@ -58,12 +60,13 @@ services:
   app3:
     build: .
     environment:
-      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/stockmarket
-      SPRING_DATASOURCE_USERNAME:               stockmarket
-      SPRING_DATASOURCE_PASSWORD:               stockmarket
+      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
+      SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
+      SPRING_DATASOURCE_PASSWORD:               ${POSTGRES_PASSWORD:-stockmarket}
       SPRING_JPA_HIBERNATE_DDL-AUTO:            update
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:  org.hibernate.dialect.PostgreSQLDialect
       APP_INSTANCE_NAME:                        stock-market-app3
+      SPRING_PROFILES_ACTIVE:                   int
       SERVER_PORT:                              8080
     depends_on:
       db:
@@ -111,8 +114,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER:     admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER:     ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP:     "false"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
