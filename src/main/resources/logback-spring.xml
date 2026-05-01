@@ -1,22 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- Pull in Spring Boot's default base config (log levels, etc.) -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
 
-    <springProperty scope="context" name="appName"   source="spring.application.name"/>
+    <springProfile name="dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%cyan(${appName})] [trace=%mdc{traceId:-none}] %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
 
-    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"app":"${appName}"}</customFields>
-            <!-- Include MDC fields – Spring inserts traceId and spanId here -->
-            <includeMdcKeyName>traceId</includeMdcKeyName>
-            <includeMdcKeyName>spanId</includeMdcKeyName>
-        </encoder>
-    </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
 
-    <root level="INFO">
-        <appender-ref ref="CONSOLE_JSON"/>
-    </root>
+    <springProfile name="int,cert,prod">
+        <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"app":"${appName}"}</customFields>
+                <includeMdcKeyName>traceId</includeMdcKeyName>
+                <includeMdcKeyName>spanId</includeMdcKeyName>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!dev &amp; !int &amp; !cert &amp; !prod">
+        <appender name="CONSOLE_FALLBACK" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} %-5level [${appName}] [trace=%mdc{traceId:-none}] %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_FALLBACK"/>
+        </root>
+    </springProfile>
 
 </configuration>
