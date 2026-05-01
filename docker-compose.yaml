@@ -1,0 +1,129 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB:       stockmarket
+      POSTGRES_USER:     stockmarket
+      POSTGRES_PASSWORD: stockmarket
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockmarket"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmindata:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app1:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/stockmarket
+      SPRING_DATASOURCE_USERNAME:               stockmarket
+      SPRING_DATASOURCE_PASSWORD:               stockmarket
+      SPRING_JPA_HIBERNATE_DDL-AUTO:            update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:  org.hibernate.dialect.PostgreSQLDialect
+      APP_INSTANCE_NAME:                        stock-market-app1
+      SERVER_PORT:                              8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app2:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/stockmarket
+      SPRING_DATASOURCE_USERNAME:               stockmarket
+      SPRING_DATASOURCE_PASSWORD:               stockmarket
+      SPRING_JPA_HIBERNATE_DDL-AUTO:            update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:  org.hibernate.dialect.PostgreSQLDialect
+      APP_INSTANCE_NAME:                        stock-market-app2
+      SERVER_PORT:                              8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app3:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/stockmarket
+      SPRING_DATASOURCE_USERNAME:               stockmarket
+      SPRING_DATASOURCE_PASSWORD:               stockmarket
+      SPRING_JPA_HIBERNATE_DDL-AUTO:            update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:  org.hibernate.dialect.PostgreSQLDialect
+      APP_INSTANCE_NAME:                        stock-market-app3
+      SERVER_PORT:                              8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${PORT:-8080}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app1
+      - app2
+      - app3
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheusdata:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+
+  loki:
+    image: grafana/loki:3.0.0
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml:ro
+      - lokidata:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER:     admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP:     "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+
+volumes:
+  pgdata:
+  pgadmindata:
+  prometheusdata:
+  lokidata:
+  grafanadata:
