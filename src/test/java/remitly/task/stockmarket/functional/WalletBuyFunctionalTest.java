@@ -3,7 +3,6 @@ package remitly.task.stockmarket.functional;
 import io.qameta.allure.Description;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import remitly.task.stockmarket.dto.WalletResponse;
 import remitly.task.stockmarket.steps.BankSteps;
 import remitly.task.stockmarket.steps.WalletSteps;
@@ -32,8 +31,10 @@ class WalletBuyFunctionalTest extends BaseFunctionalTest {
     void shouldReturn200WhenBuyingStockWithSufficientBankQuantity() throws Exception {
         //given
         bankSteps.seedBank(STOCK_NAME, INITIAL_BANK_QUANTITY);
-        //when //then
+        //when
         walletSteps.buyStock(WALLET_ID, STOCK_NAME);
+        //then
+        assertThat(walletSteps.getStockQuantity(WALLET_ID, STOCK_NAME)).isEqualTo(ONE);
     }
 
     @Test

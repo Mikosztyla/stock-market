@@ -15,6 +15,7 @@ class WalletSellFunctionalTest extends BaseFunctionalTest {
     private static final String STOCK_NAME = "AAPL";
     private static final int INITIAL_BANK_QUANTITY = 10;
     private static final int ONE = 1;
+    private static final int ZERO = 0;
 
     @Autowired
     private BankSteps bankSteps;
@@ -28,8 +29,10 @@ class WalletSellFunctionalTest extends BaseFunctionalTest {
         //given
         bankSteps.seedBank(STOCK_NAME, INITIAL_BANK_QUANTITY);
         walletSteps.buyStock(WALLET_ID, STOCK_NAME);
-        //when //then
+        //when
         walletSteps.sellStock(WALLET_ID, STOCK_NAME);
+        //then
+        assertThat(walletSteps.getStockQuantity(WALLET_ID, STOCK_NAME)).isEqualTo(ZERO);
     }
 
     @Test
