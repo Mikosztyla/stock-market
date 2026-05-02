@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <suppress>
+        <notes>
+            False positive — OWASP incorrectly matches opentelemetry-semconv version numbers
+            against OpenTelemetry core CVEs. The semconv artifact is a separate library
+            containing only semantic convention constants, not the affected core components.
+            Reviewed on 2026-05-02. Revisit if a semconv-specific CVE is published.
+        </notes>
+        <packageUrl regex="true">^pkg:maven/io\.opentelemetry\.semconv/opentelemetry\-semconv@.*$</packageUrl>
+        <cve>CVE-2026-39883</cve>
+    </suppress>
+
+    <suppress>
+        <notes>
+            False positive — same reasoning as above.
+            Reviewed on 2026-05-02.
+        </notes>
+        <packageUrl regex="true">^pkg:maven/io\.opentelemetry\.semconv/opentelemetry\-semconv@.*$</packageUrl>
+        <cve>CVE-2026-29181</cve>
+    </suppress>
+
+</suppressions>
