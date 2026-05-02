@@ -20,6 +20,9 @@ public class BankService {
     }
 
     public BankStock getOrThrow(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Stock name must not be null or blank");
+        }
         log.debug("Looking up bank stock: stock={}", name);
         return bankRepo.findById(name)
                 .orElseThrow(() -> {
@@ -29,6 +32,12 @@ public class BankService {
     }
 
     public void decrease(String stock, int qty) {
+        if (stock == null || stock.isBlank()) {
+            throw new IllegalArgumentException("Stock name must not be null or blank");
+        }
+        if (qty <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
         log.debug("Decreasing bank stock: stock={} qty={}", stock, qty);
         BankStock bs = getOrThrow(stock);
 
@@ -48,6 +57,12 @@ public class BankService {
     }
 
     public void increase(String stock, int qty) {
+        if (stock == null || stock.isBlank()) {
+            throw new IllegalArgumentException("Stock name must not be null or blank");
+        }
+        if (qty <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
         log.debug("Increasing bank stock: stock={} qty={}", stock, qty);
         BankStock bs = bankRepo.findById(stock)
                 .orElse(new BankStock());
@@ -65,6 +80,9 @@ public class BankService {
     }
 
     public void setState(List<BankStock> stocks) {
+        if (stocks == null) {
+            throw new IllegalArgumentException("Stocks list must not be null");
+        }
         log.info("Setting bank state: stocks={}", stocks.stream()
                 .map(s -> s.getStockName() + "=" + s.getQuantity())
                 .toList());

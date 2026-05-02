@@ -24,6 +24,16 @@ public class WalletService {
 
     @Transactional
     public void execute(String walletId, String stock, String type) {
+        if (walletId == null || walletId.isBlank()) {
+            throw new IllegalArgumentException("Wallet id must not be null or blank");
+        }
+        if (stock == null || stock.isBlank()) {
+            throw new IllegalArgumentException("Stock name must not be null or blank");
+        }
+        if (!"buy".equals(type) && !"sell".equals(type)) {
+            throw new IllegalArgumentException("Operation type must be buy or sell");
+        }
+
         log.debug("Executing operation: type={} walletId={} stock={}", type, walletId, stock);
 
         Wallet wallet = walletRepo.findById(walletId)
@@ -41,7 +51,6 @@ public class WalletService {
 
         if ("buy".equals(type)) {
             log.debug("Processing BUY: walletId={} stock={}", walletId, stock);
-
             bankService.decrease(stock, 1);
 
             if (ws == null) {
@@ -76,6 +85,9 @@ public class WalletService {
     }
 
     public Wallet get(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Wallet id must not be null or blank");
+        }
         log.debug("Fetching wallet: walletId={}", id);
         return walletRepo.findById(id)
                 .orElse(new Wallet());
