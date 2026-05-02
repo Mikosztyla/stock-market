@@ -36,7 +36,7 @@ public class WalletService {
 
         log.debug("Executing operation: type={} walletId={} stock={}", type, walletId, stock);
 
-        Wallet wallet = walletRepo.findById(walletId)
+        Wallet wallet = walletRepo.findByIdWithStocks(walletId)
                 .orElseGet(() -> {
                     log.info("Wallet not found, creating new one: walletId={}", walletId);
                     Wallet w = new Wallet();
@@ -84,12 +84,13 @@ public class WalletService {
         auditService.log(type, walletId, stock);
     }
 
+    @Transactional
     public Wallet get(String id) {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("Wallet id must not be null or blank");
         }
         log.debug("Fetching wallet: walletId={}", id);
-        return walletRepo.findById(id)
+        return walletRepo.findByIdWithStocks(id)
                 .orElse(new Wallet());
     }
 }

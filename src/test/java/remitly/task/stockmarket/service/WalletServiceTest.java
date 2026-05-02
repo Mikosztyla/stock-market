@@ -99,7 +99,7 @@ class WalletServiceTest {
     @Description("Buying a stock for a wallet that does not exist yet should create the wallet automatically")
     void shouldCreateWalletWhenBuyingStockForNonExistentWallet() {
         //given
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.empty());
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.empty());
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, BUY);
         //then
@@ -113,7 +113,7 @@ class WalletServiceTest {
     void shouldIncreaseWalletStockQuantityByOneWhenBuying() {
         //given
         Wallet wallet = walletWithStock(STOCK_NAME, INITIAL_QUANTITY);
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, BUY);
         //then
@@ -126,7 +126,7 @@ class WalletServiceTest {
     @Description("Buying a stock should call bankService.decrease with quantity 1")
     void shouldDecreaseBankStockByOneWhenBuying() {
         //given
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.empty());
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.empty());
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, BUY);
         //then
@@ -138,7 +138,7 @@ class WalletServiceTest {
     void shouldAddNewStockEntryToWalletWhenStockNotYetOwned() {
         //given
         Wallet wallet = emptyWallet();
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, BUY);
         //then
@@ -154,7 +154,7 @@ class WalletServiceTest {
     void shouldThrowWhenSellingStockNotInWallet() {
         //given
         Wallet wallet = emptyWallet();
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when //then
         assertThatThrownBy(() -> walletService.execute(WALLET_ID, STOCK_NAME, SELL))
                 .isInstanceOf(InsufficientStockException.class);
@@ -165,7 +165,7 @@ class WalletServiceTest {
     void shouldThrowWhenSellingStockWithZeroQuantityInWallet() {
         //given
         Wallet wallet = walletWithStock(STOCK_NAME, ZERO_QUANTITY);
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when //then
         assertThatThrownBy(() -> walletService.execute(WALLET_ID, STOCK_NAME, SELL))
                 .isInstanceOf(InsufficientStockException.class);
@@ -176,7 +176,7 @@ class WalletServiceTest {
     void shouldDecreaseWalletStockQuantityByOneWhenSelling() {
         //given
         Wallet wallet = walletWithStock(STOCK_NAME, INITIAL_QUANTITY);
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, SELL);
         //then
@@ -190,7 +190,7 @@ class WalletServiceTest {
     void shouldIncreaseBankStockByOneWhenSelling() {
         //given
         Wallet wallet = walletWithStock(STOCK_NAME, INITIAL_QUANTITY);
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, SELL);
         //then
@@ -201,7 +201,7 @@ class WalletServiceTest {
     @Description("A successful buy should produce an audit log entry with the correct type, wallet, and stock")
     void shouldLogBuyOperationToAudit() {
         //given
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.empty());
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.empty());
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, BUY);
         //then
@@ -213,7 +213,7 @@ class WalletServiceTest {
     void shouldLogSellOperationToAudit() {
         //given
         Wallet wallet = walletWithStock(STOCK_NAME, INITIAL_QUANTITY);
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when
         walletService.execute(WALLET_ID, STOCK_NAME, SELL);
         //then
@@ -225,7 +225,7 @@ class WalletServiceTest {
     void shouldNotLogOperationWhenSellFails() {
         //given
         Wallet wallet = emptyWallet();
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when //then
         assertThatThrownBy(() -> walletService.execute(WALLET_ID, STOCK_NAME, SELL))
                 .isInstanceOf(InsufficientStockException.class);
@@ -252,7 +252,7 @@ class WalletServiceTest {
     @Description("Getting a wallet that does not exist should return an empty wallet rather than throwing")
     void shouldReturnEmptyWalletWhenWalletDoesNotExist() {
         //given
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.empty());
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.empty());
         //when
         Wallet result = walletService.get(WALLET_ID);
         //then
@@ -264,7 +264,7 @@ class WalletServiceTest {
     void shouldReturnExistingWallet() {
         //given
         Wallet wallet = walletWithStock(STOCK_NAME, INITIAL_QUANTITY);
-        when(walletRepo.findById(WALLET_ID)).thenReturn(Optional.of(wallet));
+        when(walletRepo.findByIdWithStocks(WALLET_ID)).thenReturn(Optional.of(wallet));
         //when
         Wallet result = walletService.get(WALLET_ID);
         //then
