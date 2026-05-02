@@ -3,7 +3,6 @@ package remitly.task.stockmarket.functional;
 import io.qameta.allure.Description;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import remitly.task.stockmarket.dto.WalletResponse;
 import remitly.task.stockmarket.steps.BankSteps;
 import remitly.task.stockmarket.steps.WalletSteps;
