@@ -53,8 +53,6 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Cache the OWASP NVD database so we don't download it on every run
-      # The database is ~300MB and updates daily
       - name: Cache OWASP dependency check database
         uses: actions/cache@v4
         with:
@@ -77,7 +75,8 @@ jobs:
           ./mvnw org.owasp:dependency-check-maven:check \
             -Dformat=HTML \
             -DfailBuildOnCVSS=7 \
-            -DnvdApiKey=${NVD_API_KEY}
+            -DnvdApiKey=${NVD_API_KEY} \
+            -DsuppressionFile=${{ github.workspace }}/owasp-suppressions.xml
 
       - name: Upload OWASP report
         uses: actions/upload-artifact@v4
