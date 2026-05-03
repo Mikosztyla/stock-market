@@ -1,5 +1,6 @@
 package remitly.task.stockmarket.service;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import remitly.task.stockmarket.exceptions.InsufficientStockException;
@@ -31,6 +32,7 @@ public class BankService {
                 });
     }
 
+    @Transactional(value = Transactional.TxType.MANDATORY)
     public void decrease(String stock, int qty) {
         if (stock == null || stock.isBlank()) {
             throw new IllegalArgumentException("Stock name must not be null or blank");
@@ -39,7 +41,12 @@ public class BankService {
             throw new IllegalArgumentException("Quantity must be positive");
         }
         log.debug("Decreasing bank stock: stock={} qty={}", stock, qty);
-        BankStock bs = getOrThrow(stock);
+
+        BankStock bs = bankRepo.findByIdWithLock(stock)
+                .orElseThrow(() -> {
+                    log.warn("Stock not found in bank: stock={}", stock);
+                    return new StockNotFoundException("Stock not found in bank");
+                });
 
         if (bs.getQuantity() < qty) {
             log.warn("Insufficient bank stock: stock={} requested={} available={}", stock, qty, bs.getQuantity());
@@ -56,6 +63,7 @@ public class BankService {
         }
     }
 
+    @Transactional(value = Transactional.TxType.MANDATORY)
     public void increase(String stock, int qty) {
         if (stock == null || stock.isBlank()) {
             throw new IllegalArgumentException("Stock name must not be null or blank");
@@ -64,7 +72,8 @@ public class BankService {
             throw new IllegalArgumentException("Quantity must be positive");
         }
         log.debug("Increasing bank stock: stock={} qty={}", stock, qty);
-        BankStock bs = bankRepo.findById(stock)
+
+        BankStock bs = bankRepo.findByIdWithLock(stock)
                 .orElse(new BankStock());
 
         int before = bs.getQuantity();

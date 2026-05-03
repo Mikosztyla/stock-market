@@ -2,6 +2,9 @@ package remitly.task.stockmarket.service;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import remitly.task.stockmarket.exceptions.InsufficientStockException;
 import remitly.task.stockmarket.model.Wallet;
@@ -22,6 +25,11 @@ public class WalletService {
         this.auditService = auditService;
     }
 
+    @Retryable(
+            retryFor = ObjectOptimisticLockingFailureException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50, multiplier = 2)
+    )
     @Transactional
     public void execute(String walletId, String stock, String type) {
         if (walletId == null || walletId.isBlank()) {
