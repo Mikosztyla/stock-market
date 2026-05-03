@@ -29,14 +29,6 @@ services:
 
   app1:
     build: .
-    stop_grace_period: 5s
-    healthcheck:
-      test: [ "CMD-SHELL",
-              "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
     environment:
       SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
       SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
@@ -49,17 +41,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      zipkin:
+        condition: service_healthy
 
   app2:
     build: .
-    stop_grace_period: 5s
-    healthcheck:
-      test: [ "CMD-SHELL",
-              "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
     environment:
       SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
       SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
@@ -72,17 +58,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      zipkin:
+        condition: service_healthy
 
   app3:
     build: .
-    stop_grace_period: 5s
-    healthcheck:
-      test: [ "CMD-SHELL",
-              "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
     environment:
       SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
       SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
@@ -95,6 +75,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      zipkin:
+        condition: service_healthy
 
   nginx:
     image: nginx:1.27-alpine
@@ -106,6 +88,16 @@ services:
       - app1
       - app2
       - app3
+
+  zipkin:
+    image: openzipkin/zipkin:3
+    ports:
+      - "9411:9411"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9411/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   prometheus:
     image: prom/prometheus:v2.51.0
@@ -147,6 +139,7 @@ services:
     depends_on:
       - prometheus
       - loki
+      - zipkin
 
 volumes:
   pgdata:
