@@ -1,37 +1,36 @@
 package remitly.task.stockmarket.e2e;
 
-import io.qameta.allure.Description;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import remitly.task.stockmarket.chaos.SystemExiter;
-import remitly.task.stockmarket.config.E2ETestConfig;
+import remitly.task.stockmarket.config.ChaosTestConfig;
 import remitly.task.stockmarket.dto.BankResponse;
 import remitly.task.stockmarket.dto.StockDto;
 import remitly.task.stockmarket.dto.StockOperationRequest;
-
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.main.allow-bean-definition-overriding=true"
-)
-@ActiveProfiles("int")
-@Import({E2ETestConfig.class, ChaosE2ETest.ChaosTestConfig.class})
+@Import(ChaosTestConfig.class)
 @DirtiesContext
 class ChaosE2ETest extends BaseE2ETest {
+
+    private static final String CHAOS_ENDPOINT = "/chaos";
+    private static final String STOCKS_ENDPOINT = "/stocks";
+    private static final String WALLET_STOCK_ENDPOINT = "/wallets/{walletId}/stocks/{stock}";
+    private static final String STOCK_NAME = "AAPL";
+    private static final String WALLET_ID = "alice";
+    private static final String BUY = "buy";
+    private static final int INITIAL_QUANTITY = 5;
+    private static final int EXPECTED_WALLET_QUANTITY = 1;
+    private static final int EXIT_CODE_SUCCESS = 0;
+    private static final int ONCE = 1;
+    private static final long ASYNC_WAIT_MS = 200L;
 
     @Autowired
     private SystemExiter systemExiter;
@@ -42,74 +41,66 @@ class ChaosE2ETest extends BaseE2ETest {
     }
 
     @Test
-    @Description("POST /chaos should return HTTP 200")
-    void shouldReturn200() {
+    void shouldReturnHttp200() {
+        //when
         client.post()
-                .uri("/chaos")
+                .uri(CHAOS_ENDPOINT)
                 .exchange()
                 .expectStatus().isOk();
     }
 
     @Test
-    @Description("POST /chaos should call SystemExiter.exit(0) exactly once")
-    void shouldCallExitOnce() throws InterruptedException {
+    void shouldCallSystemExiterWithCodeZeroExactlyOnce() throws InterruptedException {
+        //when
         client.post()
-                .uri("/chaos")
+                .uri(CHAOS_ENDPOINT)
                 .exchange()
                 .expectStatus().isOk();
-        Thread.sleep(200);
-        verify(systemExiter, times(1)).exit(0);
+        Thread.sleep(ASYNC_WAIT_MS);
+        //then
+        verify(systemExiter, times(ONCE)).exit(EXIT_CODE_SUCCESS);
     }
 
     @Test
-    @Description("POST /chaos should return empty body")
     void shouldReturnEmptyBody() {
+        //when
         byte[] body = client.post()
-                .uri("/chaos")
+                .uri(CHAOS_ENDPOINT)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .returnResult()
                 .getResponseBody();
+        //then
         assertThat(body).isNullOrEmpty();
     }
 
     @Test
-    @Description("Application state should be intact before exit fires")
-    void shouldNotAffectStateBeforeExit() {
-        // given
+    void shouldNotAffectExistingStateBeforeExit() {
+        //given
         client.post()
-                .uri("/stocks")
-                .bodyValue(new BankResponse(List.of(new StockDto("AAPL", 5))))
+                .uri(STOCKS_ENDPOINT)
+                .bodyValue(new BankResponse(List.of(new StockDto(STOCK_NAME, INITIAL_QUANTITY))))
                 .exchange()
                 .expectStatus().isOk();
         client.post()
-                .uri("/wallets/{walletId}/stocks/{stock}", "alice", "AAPL")
-                .bodyValue(new StockOperationRequest("buy"))
+                .uri(WALLET_STOCK_ENDPOINT, WALLET_ID, STOCK_NAME)
+                .bodyValue(new StockOperationRequest(BUY))
                 .exchange()
                 .expectStatus().isOk();
-        // when
+        //when
         client.post()
-                .uri("/chaos")
+                .uri(CHAOS_ENDPOINT)
                 .exchange()
                 .expectStatus().isOk();
-        // then
+        //then
         Integer quantity = client.get()
-                .uri("/wallets/{walletId}/stocks/{stock}", "alice", "AAPL")
+                .uri(WALLET_STOCK_ENDPOINT, WALLET_ID, STOCK_NAME)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Integer.class)
                 .returnResult()
                 .getResponseBody();
-        assertThat(quantity).isEqualTo(1);
-    }
-
-    @TestConfiguration
-    static class ChaosTestConfig {
-        @Bean
-        @Primary
-        SystemExiter systemExiter() {
-            return Mockito.mock(SystemExiter.class);
-        }
+        assertThat(quantity).isEqualTo(EXPECTED_WALLET_QUANTITY);
     }
 }

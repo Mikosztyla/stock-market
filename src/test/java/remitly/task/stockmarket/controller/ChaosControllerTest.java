@@ -1,6 +1,5 @@
 package remitly.task.stockmarket.controller;
 
-import io.qameta.allure.Description;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -11,13 +10,16 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import remitly.task.stockmarket.chaos.ChaosShutdownEvent;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ChaosControllerTest {
+
+    private static final int ONCE = 1;
+    private static final HttpStatus EXPECTED_STATUS = HttpStatus.OK;
 
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
@@ -26,32 +28,28 @@ class ChaosControllerTest {
     private ChaosController chaosController;
 
     @Test
-    @Description("POST /chaos should return HTTP 200")
-    void shouldReturn200() {
-        // when
+    void shouldReturnHttp200() {
+        //when
         ResponseEntity<Void> response = chaosController.kill();
-        // then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(EXPECTED_STATUS);
     }
 
     @Test
-    @Description("POST /chaos should publish a ChaosShutdownEvent")
     void shouldPublishChaosShutdownEvent() {
-        // when
+        //when
         chaosController.kill();
-        // then
+        //then
         ArgumentCaptor<ChaosShutdownEvent> captor = ArgumentCaptor.forClass(ChaosShutdownEvent.class);
         verify(applicationEventPublisher).publishEvent(captor.capture());
         assertThat(captor.getValue()).isInstanceOf(ChaosShutdownEvent.class);
     }
 
     @Test
-    @Description("POST /chaos should publish exactly one event")
     void shouldPublishExactlyOneEvent() {
-        // when
+        //when
         chaosController.kill();
-        // then
-        verify(applicationEventPublisher, times(1))
-                .publishEvent(org.mockito.ArgumentMatchers.any(ChaosShutdownEvent.class));
+        //then
+        verify(applicationEventPublisher, times(ONCE)).publishEvent(any(ChaosShutdownEvent.class));
     }
 }

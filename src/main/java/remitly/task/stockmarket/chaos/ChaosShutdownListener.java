@@ -9,6 +9,10 @@ public class ChaosShutdownListener implements ApplicationListener<ChaosShutdownE
 
     private final SystemExiter systemExiter;
 
+    public ChaosShutdownListener() {
+        this(System::exit);
+    }
+
     public ChaosShutdownListener(SystemExiter systemExiter) {
         this.systemExiter = systemExiter;
     }

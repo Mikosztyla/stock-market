@@ -1,32 +1,27 @@
 package remitly.task.stockmarket.functional;
 
-import io.qameta.allure.Description;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import remitly.task.stockmarket.chaos.SystemExiter;
-import remitly.task.stockmarket.config.TestConfig;
-
+import remitly.task.stockmarket.config.ChaosTestConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
-@AutoConfigureMockMvc
-@ActiveProfiles("int")
-@Import({TestConfig.class, ChaosFunctionalTest.ChaosTestConfig.class})
+@Import(ChaosTestConfig.class)
 @DirtiesContext
 class ChaosFunctionalTest extends BaseFunctionalTest {
+
+    private static final String CHAOS_ENDPOINT = "/chaos";
+    private static final int EXIT_CODE_SUCCESS = 0;
+    private static final int ONCE = 1;
+    private static final long ASYNC_WAIT_MS = 200L;
 
     @Autowired
     private SystemExiter systemExiter;
@@ -37,37 +32,28 @@ class ChaosFunctionalTest extends BaseFunctionalTest {
     }
 
     @Test
-    @Description("POST /chaos should return HTTP 200")
-    void shouldReturn200() throws Exception {
-        mockMvc.perform(post("/chaos"))
+    void shouldReturnHttp200() throws Exception {
+        //when
+        mockMvc.perform(post(CHAOS_ENDPOINT))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @Description("POST /chaos should call SystemExiter.exit(0) exactly once")
-    void shouldCallExitOnce() throws Exception {
-        mockMvc.perform(post("/chaos"))
+    void shouldCallSystemExiterWithCodeZeroExactlyOnce() throws Exception {
+        //when
+        mockMvc.perform(post(CHAOS_ENDPOINT))
                 .andExpect(status().isOk());
-        Thread.sleep(200);
-        verify(systemExiter, times(1)).exit(0);
+        Thread.sleep(ASYNC_WAIT_MS);
+        //then
+        verify(systemExiter, times(ONCE)).exit(EXIT_CODE_SUCCESS);
     }
 
     @Test
-    @Description("POST /chaos should return an empty body")
     void shouldReturnEmptyBody() throws Exception {
-        mockMvc.perform(post("/chaos"))
+        //when
+        mockMvc.perform(post(CHAOS_ENDPOINT))
                 .andExpect(status().isOk())
-                .andExpect(result ->
-                        org.assertj.core.api.Assertions
-                                .assertThat(result.getResponse().getContentAsString()).isEmpty());
-    }
-
-    @TestConfiguration
-    static class ChaosTestConfig {
-        @Bean
-        @Primary
-        SystemExiter systemExiter() {
-            return Mockito.mock(SystemExiter.class);
-        }
+                //then
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString()).isEmpty());
     }
 }
