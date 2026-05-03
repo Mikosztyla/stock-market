@@ -29,6 +29,14 @@ services:
 
   app1:
     build: .
+    stop_grace_period: 5s
+    healthcheck:
+      test: [ "CMD-SHELL",
+              "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     environment:
       SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
       SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
@@ -44,6 +52,14 @@ services:
 
   app2:
     build: .
+    stop_grace_period: 5s
+    healthcheck:
+      test: [ "CMD-SHELL",
+              "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     environment:
       SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
       SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
@@ -59,6 +75,14 @@ services:
 
   app3:
     build: .
+    stop_grace_period: 5s
+    healthcheck:
+      test: [ "CMD-SHELL",
+              "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     environment:
       SPRING_DATASOURCE_URL:                    jdbc:postgresql://db:5432/${POSTGRES_DB:-stockmarket}
       SPRING_DATASOURCE_USERNAME:               ${POSTGRES_USER:-stockmarket}
