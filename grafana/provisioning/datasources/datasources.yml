@@ -14,3 +14,9 @@ datasources:
     uid:     loki
     url:     http://loki:3100
     editable: false
+
+  - name:    Zipkin
+    type:    zipkin
+    uid:     zipkin
+    url:     http://zipkin:9411
+    editable: false
