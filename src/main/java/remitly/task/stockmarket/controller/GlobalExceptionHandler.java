@@ -1,7 +1,9 @@
 package remitly.task.stockmarket.controller;
 
+import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,5 +41,12 @@ public class GlobalExceptionHandler {
     public Map<String, String> handleOptimisticLock(Exception ex) {
         log.warn("Optimistic lock conflict — concurrent modification detected: {}", ex.getMessage());
         return Map.of("error", "Concurrent modification detected, please retry");
+    }
+
+    @ExceptionHandler({LockTimeoutException.class, QueryTimeoutException.class})
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Map<String, String> handleLockTimeout(Exception ex) {
+        log.warn("Lock timeout — system under heavy load: {}", ex.getMessage());
+        return Map.of("error", "System is under heavy load, please retry in a moment");
     }
 }

@@ -111,7 +111,7 @@ class BankServiceTest {
     @Description("Decreasing a stock that has never been seeded should throw StockNotFoundException")
     void shouldThrowWhenDecreasingNonExistentStock() {
         //given
-        when(bankRepo.findById(STOCK_NAME)).thenReturn(Optional.empty());
+        when(bankRepo.findByIdWithLock(STOCK_NAME)).thenReturn(Optional.empty());
         //when //then
         assertThatThrownBy(() -> bankService.decrease(STOCK_NAME, DECREASE_QUANTITY))
                 .isInstanceOf(StockNotFoundException.class);
@@ -122,7 +122,7 @@ class BankServiceTest {
     void shouldThrowWhenBankHasInsufficientQuantity() {
         //given
         BankStock stock = bankStockOf(STOCK_NAME, ZERO_QUANTITY);
-        when(bankRepo.findById(STOCK_NAME)).thenReturn(Optional.of(stock));
+        when(bankRepo.findByIdWithLock(STOCK_NAME)).thenReturn(Optional.of(stock));
         //when //then
         assertThatThrownBy(() -> bankService.decrease(STOCK_NAME, DECREASE_QUANTITY))
                 .isInstanceOf(InsufficientStockException.class);
@@ -133,7 +133,7 @@ class BankServiceTest {
     void shouldReduceQuantityWhenDecreasingStock() {
         //given
         BankStock stock = bankStockOf(STOCK_NAME, INITIAL_QUANTITY);
-        when(bankRepo.findById(STOCK_NAME)).thenReturn(Optional.of(stock));
+        when(bankRepo.findByIdWithLock(STOCK_NAME)).thenReturn(Optional.of(stock));
         //when
         bankService.decrease(STOCK_NAME, DECREASE_QUANTITY);
         //then
@@ -178,7 +178,7 @@ class BankServiceTest {
     @Description("Increasing a stock that does not exist yet should create it with the given quantity")
     void shouldCreateStockWhenIncreasingNonExistentStock() {
         //given
-        when(bankRepo.findById(STOCK_NAME)).thenReturn(Optional.empty());
+        when(bankRepo.findByIdWithLock(STOCK_NAME)).thenReturn(Optional.empty());
         //when
         bankService.increase(STOCK_NAME, DECREASE_QUANTITY);
         //then
@@ -193,7 +193,7 @@ class BankServiceTest {
     void shouldAddQuantityWhenIncreasingExistingStock() {
         //given
         BankStock stock = bankStockOf(STOCK_NAME, INITIAL_QUANTITY);
-        when(bankRepo.findById(STOCK_NAME)).thenReturn(Optional.of(stock));
+        when(bankRepo.findByIdWithLock(STOCK_NAME)).thenReturn(Optional.of(stock));
         //when
         bankService.increase(STOCK_NAME, DECREASE_QUANTITY);
         //then

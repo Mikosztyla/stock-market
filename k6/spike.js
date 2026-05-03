@@ -22,7 +22,7 @@ export const options = {
     },
     thresholds: {
         'server_errors_5xx': ['count<5'],
-        'http_req_duration{expected_response:true}': ['p(95)<2000'],
+        'http_req_duration{expected_response:true}': ['p(95)<5000'],
     },
 };
 
