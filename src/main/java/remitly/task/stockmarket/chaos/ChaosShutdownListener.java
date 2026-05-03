@@ -7,9 +7,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class ChaosShutdownListener implements ApplicationListener<ChaosShutdownEvent> {
 
+    private final SystemExiter systemExiter;
+
+    public ChaosShutdownListener(SystemExiter systemExiter) {
+        this.systemExiter = systemExiter;
+    }
+
     @Async
     @Override
     public void onApplicationEvent(ChaosShutdownEvent event) {
-        System.exit(0);
+        systemExiter.exit(0);
     }
 }
